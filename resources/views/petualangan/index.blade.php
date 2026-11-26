@@ -14,10 +14,10 @@
 
     {{-- ringkasan perjalanan --}}
     <section class="fc-journey-bar">
-        <span class="fc-pill"><span class="fc-tile fc-tile-orange">🚶</span><span><b>Hari ke-{{ $hariKe ?? '-' }}</b> dari {{ count($j['hari']) }}</span></span>
-        <span class="fc-pill"><span class="fc-tile fc-tile-yellow">🪙</span><span><b>{{ $jumlahBaik }}</b> hari baik</span></span>
-        <span class="fc-pill"><span class="fc-tile fc-tile-red">⚠️</span><span><b>{{ $jumlahBoros }}</b> hari boros</span></span>
-        <span class="fc-pill"><span class="fc-tile fc-tile-purple">🐾</span><span><b>{{ count($petSaya) }}/{{ count(Pets::PETS) }}</b> teman</span></span>
+        <span class="fc-pill"><span><b>Hari ke-{{ $hariKe ?? '-' }}</b> dari {{ count($j['hari']) }}</span></span>
+        <span class="fc-pill"><span><b>{{ $jumlahBaik }}</b> hari baik</span></span>
+        <span class="fc-pill"><span><b>{{ $jumlahBoros }}</b> hari boros</span></span>
+        <span class="fc-pill"><span><b>{{ count($petSaya) }}/{{ count(Pets::PETS) }}</b> teman</span></span>
     </section>
 
     {{-- peta: versi lebar (7 titik per baris) dan versi HP (4 titik per baris) --}}
@@ -77,7 +77,7 @@
 
                         <dialog id="pet-{{ $id }}" class="fc-dialog" @if ($baru === $id) data-langsung-buka @endif>
                             @if ($baru === $id)
-                                <p class="fc-dialog-new">🎉 Telurmu menetas!</p>
+                                <p class="fc-dialog-new">Telurmu menetas!</p>
                             @endif
                             <div class="fc-dialog-pet"><x-pet :id="$id" :size="140" /></div>
                             <p class="fc-dialog-tag">{{ $p['sifat'] }}</p>

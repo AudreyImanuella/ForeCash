@@ -7,10 +7,10 @@
 @php
     $st = $f['status'];
     $LABEL = ['aman' => 'Aman', 'waspada' => 'Waspada', 'kritis' => 'Kritis'];
-    $DOT = ['aman' => '#2EBD74', 'waspada' => '#F0A000', 'kritis' => '#FF5B5B'];
+    $DOT = ['aman' => '#3B2A14', 'waspada' => '#C77800', 'kritis' => '#E8532F'];
     $KATA = ['aman' => 'Aman, lanjutkan!', 'waspada' => 'Pelan-pelan ya...', 'kritis' => 'Gawat, rem dulu!'];
-    $BUKIT1 = ['aman' => '#7FD6A0', 'waspada' => '#F4B860', 'kritis' => '#A79FCB'];
-    $BUKIT2 = ['aman' => '#4CC283', 'waspada' => '#E89A3C', 'kritis' => '#8C83B8'];
+    $BUKIT1 = ['aman' => '#FFD96B', 'waspada' => '#FFC170', 'kritis' => '#F59A7A'];
+    $BUKIT2 = ['aman' => '#F5B82E', 'waspada' => '#F29A3A', 'kritis' => '#E8532F'];
     $POSE = ['aman' => 'senang', 'waspada' => 'cemas', 'kritis' => 'nangis'];
 
     // hari-hari menuju pemasukan berikutnya: koin = hari yang masih tertutup saldo
@@ -21,7 +21,7 @@
 <section class="fc-hero" data-status="{{ $st }}" aria-label="Peringatan dini">
     <svg class="fc-hero-scene" viewBox="0 0 1200 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
         @if ($st === 'aman')
-            <circle cx="840" cy="70" r="120" fill="#FFF3B0" opacity=".55" />
+            <circle cx="840" cy="70" r="120" fill="#FFF59D" opacity=".6" />
             <x-maskot x="770" y="0" width="140" height="140" />
             <g fill="#fff" opacity=".9"><ellipse cx="640" cy="70" rx="60" ry="20" /><ellipse cx="680" cy="55" rx="40" ry="24" /><ellipse cx="1000" cy="40" rx="46" ry="14" /></g>
         @elseif ($st === 'waspada')
@@ -30,8 +30,8 @@
             <g fill="#FFF4DB" opacity=".9"><ellipse cx="650" cy="80" rx="70" ry="18" /><ellipse cx="1010" cy="50" rx="50" ry="14" /></g>
         @else
             <x-maskot x="790" y="60" width="110" height="110" opacity=".55" />
-            <g fill="#8E86B5"><ellipse cx="830" cy="80" rx="110" ry="40" /><ellipse cx="890" cy="60" rx="70" ry="42" /><ellipse cx="760" cy="70" rx="60" ry="34" /></g>
-            <g stroke="#7FA4E6" stroke-width="5" stroke-linecap="round" class="fc-rain">
+            <g fill="#D9C7A8"><ellipse cx="830" cy="80" rx="110" ry="40" /><ellipse cx="890" cy="60" rx="70" ry="42" /><ellipse cx="760" cy="70" rx="60" ry="34" /></g>
+            <g stroke="#FFFBEF" stroke-width="5" stroke-linecap="round" class="fc-rain">
                 <line x1="770" y1="130" x2="762" y2="150" /><line x1="815" y1="140" x2="807" y2="160" /><line x1="860" y1="128" x2="852" y2="148" />
                 <line x1="905" y1="138" x2="897" y2="158" /><line x1="790" y1="175" x2="782" y2="195" /><line x1="880" y1="178" x2="872" y2="198" />
             </g>
@@ -81,7 +81,7 @@
         @endif
 
         @foreach ($f['terlambat'] as $t)
-            <p style="color: #C22C2C">{{ $t['sumber'] }} ({{ Format::rupiah($t['nominal']) }}) belum datang sejak {{ Format::tgl($t['tanggal_perkiraan']) }}.</p>
+            <p style="color: #B93A1C">{{ $t['sumber'] }} ({{ Format::rupiah($t['nominal']) }}) belum datang sejak {{ Format::tgl($t['tanggal_perkiraan']) }}.</p>
         @endforeach
 
         @if ($hariTotal > 0)

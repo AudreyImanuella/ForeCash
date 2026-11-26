@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Forecast;
 use App\Support\Gamify;
+use App\Support\Format;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -40,8 +41,23 @@ class BerandaController extends Controller
         $g = Gamify::untuk($user);
         $petDipakai = $user->pets()->where('dipakai', true)->value('pet_id');
 
+        // mood tupai di kartu utama: urutan prioritasnya dari yang paling gawat
+        $jajanHariIni = (float) $user->transactions()
+            ->where('jenis', 'pengeluaran')
+            ->where('tanggal', Format::hariIni())
+            ->sum('nominal');
+        $batasHarian = (float) $user->batas_harian;
+        $mood = match (true) {
+            $f['status'] === 'kritis' => 'nangis',
+            $batasHarian > 0 && $jajanHariIni > $batasHarian => 'marah',
+            $f['status'] === 'waspada' => 'cemas',
+            (bool) ($g['tantangan']['selesai'] ?? false) => 'bangga',
+            default => 'senang',
+        };
+
         return view('beranda.index', compact(
-            'user', 'wallets', 'f', 'transaksi', 'piutang', 'utang', 'rencanaDekat', 'targetAktif', 'tagihanTeman', 'g', 'petDipakai'
+            'user', 'wallets', 'f', 'transaksi', 'piutang', 'utang', 'rencanaDekat', 'targetAktif', 'tagihanTeman', 'g', 'petDipakai',
+            'mood', 'jajanHariIni', 'batasHarian'
         ));
     }
 }

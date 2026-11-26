@@ -96,14 +96,14 @@
         @endforeach
     @endfor
     @if ($tema === 'aman')
-        <ellipse cx="{{ $W * 0.12 }}" cy="{{ $H - 34 }}" rx="{{ $W * 0.09 }}" ry="20" fill="#7CC8F2" /><text x="{{ $W * 0.1 }}" y="{{ $H - 26 }}" font-size="20">🦆</text>
+        <ellipse cx="{{ $W * 0.12 }}" cy="{{ $H - 34 }}" rx="{{ $W * 0.09 }}" ry="20" fill="#7CC8F2" />
     @elseif ($tema === 'waspada')
-        <text x="{{ $W * 0.08 }}" y="{{ $H - 24 }}" font-size="24">🍂</text><text x="{{ $W * 0.86 }}" y="{{ $H - 30 }}" font-size="22">🍁</text>
+        
     @else
         @for ($i = 0; $i < 18; $i++)
             <circle cx="{{ ($i * 137) % $W }}" cy="{{ ($i * 89) % $H }}" r="3" fill="#fff" class="fc-snow" style="animation-delay: {{ $i % 6 }}s" />
         @endfor
-        <text x="{{ $W * 0.08 }}" y="{{ $H - 24 }}" font-size="26">⛄</text>
+        
     @endif
 
     <path d="{{ $d }}" stroke="{{ $t['road'] }}" stroke-width="{{ $cols > 5 ? 40 : 34 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
@@ -121,7 +121,7 @@
             <title>{{ $info }}</title>
             @if ($h['status'] === 'gajian')
                 <circle r="30" fill="#2EBD74" stroke="#fff" stroke-width="5" />
-                <text y="10" text-anchor="middle" font-size="28">🏁</text>
+                <path d="M-7 13V-13M-7-13H10L5-6l5 7H-7" stroke="#fff" stroke-width="3" fill="#fff" stroke-linejoin="round" />
                 <rect x="-46" y="38" width="92" height="24" rx="12" fill="#fff" />
                 <text y="55" text-anchor="middle" class="fc-node-label" fill="#1F9A5C">Uang saku</text>
             @elseif ($h['status'] === 'hariini')

@@ -133,8 +133,8 @@ document.querySelectorAll('[data-chatbot]').forEach((bot) => {
     const batasi = (p) => {
         const bawah = window.innerWidth < 1024 ? 100 : 0;
         return {
-            x: Math.min(Math.max(8, p.x), window.innerWidth - 72),
-            y: Math.min(Math.max(8, p.y), window.innerHeight - 72 - bawah),
+            x: Math.min(Math.max(8, p.x), window.innerWidth - tombol.offsetWidth - 8),
+            y: Math.min(Math.max(8, p.y), window.innerHeight - tombol.offsetHeight - 8 - bawah),
         };
     };
     const pasang = () => {
@@ -142,12 +142,13 @@ document.querySelectorAll('[data-chatbot]').forEach((bot) => {
         tombol.style.top = `${pos.y}px`;
         tombol.style.right = tombol.style.bottom = 'auto';
         // panel dibuka di sisi yang masih muat di layar
-        const pw = Math.min(352, window.innerWidth - 24), ph = 448;
-        panel.style.left = `${Math.min(Math.max(12, pos.x + 64 - pw), window.innerWidth - pw - 12)}px`;
-        panel.style.top = `${pos.y - ph - 12 > 12 ? pos.y - ph - 12 : Math.min(pos.y + 76, window.innerHeight - ph - 12)}px`;
+        const pw = Math.min(384, window.innerWidth - 24), ph = 512;
+        const tw = tombol.offsetWidth, th = tombol.offsetHeight;
+        panel.style.left = `${Math.min(Math.max(12, pos.x + tw - pw), window.innerWidth - pw - 12)}px`;
+        panel.style.top = `${pos.y - ph - 12 > 12 ? pos.y - ph - 12 : Math.min(pos.y + th + 12, window.innerHeight - ph - 12)}px`;
     };
     try { pos = JSON.parse(localStorage.getItem(POS_KEY)); } catch { pos = null; }
-    pos = batasi(pos ?? { x: window.innerWidth - 88, y: window.innerHeight - 96 });
+    pos = batasi(pos ?? { x: window.innerWidth - tombol.offsetWidth - 24, y: window.innerHeight - tombol.offsetHeight - 32 });
     pasang();
     window.addEventListener('resize', () => { pos = batasi(pos); pasang(); });
 

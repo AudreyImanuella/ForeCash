@@ -7,7 +7,7 @@
 <meta name="description" content="ForeCash: aplikasi web peringatan dini keuangan untuk mahasiswa.">
 <meta name="theme-color" content="#FF8A1F">
 @stack('meta')
-{{-- font Satoshi (Fontshare, ITF Free Font License), sama dengan versi Next.js & PHP --}}
-<link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" rel="stylesheet">
+{{-- font lokal: Clash Grotesk untuk judul & angka (Fontshare FFL), Spline Sans untuk teks (OFL). Lisensi ada di public/fonts --}}
+<link rel="preload" href="{{ asset('fonts/ClashGrotesk-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ asset('fonts/SplineSans-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
 @vite(['resources/css/app.css', 'resources/js/app.js'])

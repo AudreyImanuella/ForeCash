@@ -190,7 +190,7 @@
                         <div class="{{ $i['tercapai'] ? 'bg-hsGreen' : 'bg-hsOrange' }} h-3 rounded-full" style="width: {{ $i['persen'] }}%"></div>
                     </div>
                     @if ($i['tercapai'])
-                        <p class="text-xs font-bold text-hsGreen">🎉 Tercapai!</p>
+                        <p class="text-xs font-bold text-hsGreen">Tercapai!</p>
                     @else
                         <p class="text-[11px] font-bold">
                             @if ($i['perMinggu'])

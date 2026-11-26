@@ -34,7 +34,7 @@
 
                 @forelse ($transaksi as $t)
                     <div class="fc-tx">
-                        <span class="fc-tx-icon {{ $KELAS_TX[$t->jenis] }}">{{ Format::kategoriEmoji($t->category?->nama, $t->jenis) }}</span>
+                        <span class="fc-tx-icon {{ $KELAS_TX[$t->jenis] }}"><x-ikon :nama="Format::kategoriIkon($t->category?->nama, $t->jenis)" :size="20" /></span>
                         <div class="text-sm min-w-0 flex-1">
                             <p class="font-bold truncate">{{ $t->keterangan }}</p>
                             <p class="text-xs text-slate-500 mt-0.5">

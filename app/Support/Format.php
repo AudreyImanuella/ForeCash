@@ -92,18 +92,18 @@ class Format
         return $jam < 11 ? 'Selamat pagi' : ($jam < 15 ? 'Selamat siang' : ($jam < 18 ? 'Selamat sore' : 'Selamat malam'));
     }
 
-    /** Emoji ikon transaksi per kategori (sama dengan kategoriEmoji() di lib/data.ts). */
-    public static function kategoriEmoji(?string $nama, string $jenis = 'pengeluaran'): string
+    /** Nama ikon <x-ikon> untuk transaksi per kategori (dulu emoji, sekarang ikon garis supaya senada). */
+    public static function kategoriIkon(?string $nama, string $jenis = 'pengeluaran'): string
     {
         if ($jenis === 'transfer') {
-            return '🔁';
+            return 'repeat';
         }
         $map = [
-            'Makan & Minum' => '🍜', 'Transportasi' => '🛵', 'Kos / Sewa' => '🏠', 'Kebutuhan Kuliah' => '📚', 'Hiburan' => '🎬',
-            'Uang Saku' => '💰', 'Kerja Sampingan' => '💼', 'Beasiswa' => '🎓', 'Pelunasan Utang/Piutang' => '🤝',
+            'Makan & Minum' => 'pizza', 'Transportasi' => 'map', 'Kos / Sewa' => 'house', 'Kebutuhan Kuliah' => 'clipboard', 'Hiburan' => 'sparkles',
+            'Uang Saku' => 'coins', 'Kerja Sampingan' => 'wallet', 'Beasiswa' => 'star', 'Pelunasan Utang/Piutang' => 'hand-coins',
         ];
 
-        return $map[$nama ?? ''] ?? ($jenis === 'pemasukan' ? '💵' : '🧾');
+        return $map[$nama ?? ''] ?? ($jenis === 'pemasukan' ? 'banknote' : 'receipt');
     }
 
     private static function teks(CarbonInterface|string $t): string
