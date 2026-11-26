@@ -1,66 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ForeCash
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web *early-warning* keuangan untuk mahasiswa: catat pengeluaran, **prediksi kapan saldo habis sebelum uang saku berikutnya datang**, dan biarkan orang tua ikut memantau.
 
-## About Laravel
+Dibangun dengan **Laravel 12**, Blade, Tailwind CSS 4 (Vite), dan MySQL atau SQLite.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Mahasiswa**
+- **Beranda**: ringkasan saldo, batas pengeluaran harian, dan status keuangan (aman / waspada / kritis).
+- **Prediksi saldo habis**: menghitung *burn rate* (rata-rata pengeluaran harian) lalu memperkirakan berapa hari saldo cukup dibanding jadwal pemasukan berikutnya (uang saku, gaji, dan sebagainya).
+- **Transaksi**: pemasukan, pengeluaran, dan transfer antar-wallet, dengan kategori, foto struk, dan ekspor data. Saldo wallet tidak boleh minus.
+- **Wallet**: tunai, bank, dan e-wallet.
+- **Utang & patungan**: catat utang/piutang, bagi tagihan (split bill), dan teman lewat kode teman.
+- **Rencana**: anggaran per kategori, target tabungan, dan rencana pengeluaran yang ikut dihitung dalam prediksi.
+- **Laporan bulanan** per kategori.
+- **Gamifikasi**: petualangan (peta, telur, pet), badge bertingkat, poin, level, dan tantangan mingguan.
+- **ForeCash Assistant**: chatbot berbasis aturan.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Orang tua**
+- **Pantau anak**: hubungkan akun dengan kode hubung dari akun anak, lalu lihat saldo, status prediksi, ringkasan bulan ini, dan transaksi terbaru. Anak bisa membuat kode baru atau mencabut akses kapan saja.
 
-## Learning Laravel
+**Admin**
+- Statistik jumlah pengguna per peran dan daftar pengguna.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalasi
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Kebutuhan: PHP 8.2+, Composer, Node.js 20+ (disarankan 22).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/AudreyImanuella/ForeCash.git
+cd ForeCash
 
-## Laravel Sponsors
+composer install
+cp .env.example .env
+php artisan key:generate
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# database (pilih salah satu, lihat bagian "Database")
+touch database/database.sqlite
 
-### Premium Partners
+php artisan migrate --seed    # buat tabel + kategori bawaan + akun demo
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+npm install
+npm run dev                   # biarkan jalan; buka terminal baru untuk langkah berikut
+php artisan serve
+```
 
-## Contributing
+Buka http://localhost:8000.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Database
 
-## Code of Conduct
+**SQLite** (default, tanpa instalasi tambahan): sudah diatur di `.env.example`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**MySQL**: buat database `forecash`, lalu ubah di `.env`:
 
-## Security Vulnerabilities
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=forecash
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Akun demo
 
-## License
+Dibuat oleh `php artisan migrate --seed`. Kata sandi semuanya `demo12345`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Peran | Email |
+|---|---|
+| Mahasiswa | `demo@forecash.id` |
+| Mahasiswa (teman) | `teman@forecash.id` |
+| Orang tua (terhubung ke Momo) | `ortu@forecash.id` |
+| Admin | `admin@forecash.id` |
+
+Akun demo dibuat ulang (dengan tanggal yang disesuaikan ke hari ini) setiap seeder dijalankan. **Jangan jalankan seeder ini di server publik**, karena kata sandinya diketahui umum.
+
+## Menjalankan tes
+
+```bash
+php artisan test
+```
+
+Tes memakai SQLite di memori, jadi tidak menyentuh database aslimu. Tes mencakup logika prediksi (`Forecast`), penjaga saldo (`Saldo`), serta alur daftar dan hak akses per peran.
+
+## Struktur singkat
+
+```
+app/Services/Forecast.php     inti prediksi: burn rate, runway, status
+app/Support/                  Saldo, Laporan, Rencana, Gamify, Chatbot, Format
+app/Http/Controllers/         satu controller per fitur
+app/Http/Middleware/CekPeran  pembatas halaman per peran
+database/seeders/             kategori bawaan + data demo
+resources/views/              tampilan Blade
+tests/                        tes Unit dan Feature
+```
+
+## Lisensi
+
+[MIT](LICENSE)
