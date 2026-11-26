@@ -1,0 +1,11 @@
+# Dipasang sebagai htdocs/.htaccess di hosting (InfinityFree tidak bisa mengganti document root ke public/).
+# Semua request diteruskan ke folder public/, jadi .env/env.txt, vendor, storage, dll. tidak bisa dibuka dari browser.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Lapisan cadangan: tolak akses langsung ke file sensitif.
+<FilesMatch "^(\.env.*|env\.txt|composer\.(json|lock)|package(-lock)?\.json|artisan)$">
+    Require all denied
+</FilesMatch>

@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# paket deploy (dibuat oleh deploy/buat-paket.ps1)
+/deploy/paket
+/deploy/*.zip
+/deploy/*.sql
+/env.txt
