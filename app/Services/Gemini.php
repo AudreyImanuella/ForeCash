@@ -70,4 +70,53 @@ class Gemini
 
         return null;
     }
+
+    /**
+     * Baca sebuah gambar (mis. foto struk) dan kembalikan jawaban JSON berupa teks, atau null kalau gagal.
+     * Memakai daftar model yang sama dengan jawab(): model berikutnya dicoba kalau yang pertama penuh/kuota habis.
+     */
+    public static function bacaGambar(string $instruksi, string $mime, string $base64): ?string
+    {
+        if (! self::aktif()) {
+            return null;
+        }
+
+        $models = array_filter(array_map('trim', explode(',', (string) config('services.gemini.model'))));
+        $body = [
+            'contents' => [[
+                'role' => 'user',
+                'parts' => [
+                    ['inline_data' => ['mime_type' => $mime, 'data' => $base64]],
+                    ['text' => $instruksi],
+                ],
+            ]],
+            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 400, 'responseMimeType' => 'application/json'],
+        ];
+
+        foreach ($models as $model) {
+            try {
+                $res = Http::withHeaders(['x-goog-api-key' => config('services.gemini.key')])
+                    ->timeout(max(20, (int) config('services.gemini.timeout')))
+                    ->acceptJson()
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", $body);
+            } catch (Throwable $e) {
+                Log::warning("Gemini gambar ({$model}) tidak bisa dihubungi: " . $e->getMessage());
+
+                return null;
+            }
+
+            if ($res->successful()) {
+                $teks = trim(collect($res->json('candidates.0.content.parts', []))->pluck('text')->filter()->implode(''));
+
+                return $teks !== '' ? $teks : null;
+            }
+
+            Log::warning("Gemini gambar ({$model}) gagal (HTTP {$res->status()}): " . mb_substr((string) $res->json('error.message', $res->body()), 0, 300));
+            if (! in_array($res->status(), [404, 429, 500, 503], true)) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 }

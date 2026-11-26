@@ -1,12 +1,13 @@
 {{-- ForeCash Assistant: tombol maskot yang bisa digeser + panel chat (port dari components/Chatbot.tsx).
      Logikanya di resources/js/app.js (bagian "Chatbot"). Jawaban diambil dari route('chatbot'). --}}
 <div data-chatbot data-url="{{ route('chatbot') }}" data-nama="{{ auth()->user()->namaDepan() }}" data-ai="{{ \App\Services\Gemini::aktif() ? 1 : 0 }}">
-    {{-- tombol pembuka: pil navy berwajah tupai + label, supaya jelas ini asisten AI. Bisa digeser. --}}
+    {{-- tombol pembuka: lencana bulat wajah tupai + label kecil "Asisten" (mirip lencana di game). Bisa digeser. --}}
     <button type="button" id="fcBotBtn" data-bot-tombol aria-label="Buka ForeCash Assistant" title="Tanya ForeCash Assistant (bisa digeser)"
             class="fc-bot-launch fixed z-[90]" style="right: 24px; bottom: 32px">
         <span class="fc-bot-face pointer-events-none"><x-tupai pose="senang" /></span>
-        <span class="fc-bot-text pointer-events-none"><b>Tanya Asisten</b><small>AI keuanganmu</small></span>
-        <span class="fc-bot-chat pointer-events-none"><x-ikon nama="message-circle" :size="18" :tebal="2.4" /></span>
+        <span class="fc-bot-label pointer-events-none">Asisten</span>
+        <span class="fc-bot-spark fc-bot-spark-1 pointer-events-none" aria-hidden="true"></span>
+        <span class="fc-bot-spark fc-bot-spark-2 pointer-events-none" aria-hidden="true"></span>
     </button>
 
     <div data-bot-panel hidden role="dialog" aria-label="ForeCash Assistant"

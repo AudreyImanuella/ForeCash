@@ -99,7 +99,8 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect($user->halamanAwal())
+        // intended: kalau daftar dari link undangan teman, langsung kembali ke halaman undangan itu
+        return redirect()->intended($user->halamanAwal())
             ->with('sukses', 'Akun berhasil dibuat. Selamat datang di ForeCash!');
     }
 

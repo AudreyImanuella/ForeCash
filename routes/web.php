@@ -11,7 +11,7 @@ use App\Http\Controllers\RencanaController;
 use App\Http\Controllers\UtangController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\LupaSandiController;
+use App\Http\Controllers\Auth\LupaSandiController; // dipakai lagi kalau fitur lupa sandi diaktifkan
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\PantauController;
 use App\Http\Controllers\TransaksiController;
@@ -36,10 +36,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/daftar', [AuthController::class, 'daftar'])->middleware('throttle:5,1');
 
     // lupa & reset kata sandi (nama route mengikuti bawaan Laravel supaya link di email otomatis benar)
-    Route::get('/lupa-sandi', [LupaSandiController::class, 'tampilLupa'])->name('password.request');
-    Route::post('/lupa-sandi', [LupaSandiController::class, 'kirimLink'])->middleware('throttle:5,1')->name('password.email');
-    Route::get('/reset-sandi/{token}', [LupaSandiController::class, 'tampilReset'])->name('password.reset');
-    Route::post('/reset-sandi', [LupaSandiController::class, 'simpan'])->middleware('throttle:5,1')->name('password.update');
+    // Lupa kata sandi dinonaktifkan (Nov 2026): server belum bisa mengirim email.
+    // Untuk mengaktifkan lagi, hapus tanda // di 4 baris berikut dan pasang lagi link "Lupa kata sandi?" di auth/login.blade.php.
+    // Route::get('/lupa-sandi', [LupaSandiController::class, 'tampilLupa'])->name('password.request');
+    // Route::post('/lupa-sandi', [LupaSandiController::class, 'kirimLink'])->middleware('throttle:5,1')->name('password.email');
+    // Route::get('/reset-sandi/{token}', [LupaSandiController::class, 'tampilReset'])->name('password.reset');
+    // Route::post('/reset-sandi', [LupaSandiController::class, 'simpan'])->middleware('throttle:5,1')->name('password.update');
 });
 
 // ---------- Sudah login ----------
@@ -61,6 +63,8 @@ Route::middleware('auth')->group(function () {
         // Transaksi. Route tetap (batas, export) didaftarkan sebelum resource supaya tidak dianggap {transaksi}.
         Route::put('/transaksi/batas', [TransaksiController::class, 'batasHarian'])->name('transaksi.batas');
         Route::get('/transaksi/export', [TransaksiController::class, 'export'])->name('transaksi.export');
+        // scan struk: foto dibaca Gemini (cadangannya tesseract.js di browser)
+        Route::post('/transaksi/scan', [TransaksiController::class, 'scan'])->middleware('throttle:10,1')->name('transaksi.scan');
         Route::resource('transaksi', TransaksiController::class)
             ->except(['create', 'show'])
             ->parameters(['transaksi' => 'transaksi']);
@@ -78,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/utang/{utang}/lunas', [UtangController::class, 'lunas'])->name('utang.lunas');
         Route::post('/utang/{utang}/pelunasan', [UtangController::class, 'catatPelunasan'])->name('utang.pelunasan');
         Route::delete('/utang/{utang}', [UtangController::class, 'destroy'])->name('utang.destroy');
+        // link undangan teman (dari QR / tombol Bagikan): tampilkan konfirmasi dulu, baru POST /teman
+        Route::get('/teman/tambah/{kode}', [UtangController::class, 'undangan'])->name('teman.undangan');
         Route::post('/teman', [UtangController::class, 'tambahTeman'])->name('teman.store');
         Route::delete('/teman/{teman}', [UtangController::class, 'hapusTeman'])->name('teman.destroy');
 

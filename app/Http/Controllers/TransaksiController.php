@@ -6,9 +6,11 @@ use App\Http\Requests\TransaksiRequest;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Gemini;
 use App\Support\Format;
 use App\Support\Saldo;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -241,5 +243,58 @@ class TransaksiController extends Controller
     private function simpanStruk(Request $request): ?string
     {
         return $request->file('bukti')?->store('struk/' . $request->user()->id, self::DISK);
+    }
+
+    /**
+     * Scan struk dengan Gemini: foto -> {nominal, tanggal, toko, kategori}.
+     * Tidak menyimpan apa pun; hasilnya hanya mengisi form, user tetap mengecek lalu menekan Simpan.
+     * Kalau Gemini mati / gagal, balas ok=false supaya browser memakai cadangan (tesseract.js).
+     */
+    public function scan(Request $request): JsonResponse
+    {
+        $request->validate(['foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096']);
+        if (! Gemini::aktif()) {
+            return response()->json(['ok' => false, 'alasan' => 'ai-nonaktif']);
+        }
+
+        $user = $request->user();
+        $kategori = Category::query()
+            ->where('jenis', 'pengeluaran')
+            ->where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $user->id))
+            ->pluck('nama')->all();
+        $hariIni = Format::hariIni();
+
+        $instruksi = 'Ini foto struk/nota belanja di Indonesia. Baca dan balas HANYA JSON dengan kunci: '
+            . '"nominal" (angka total yang dibayar dalam rupiah, tanpa titik/koma; null kalau tidak terbaca), '
+            . '"tanggal" (format YYYY-MM-DD; null kalau tidak ada), '
+            . '"toko" (nama toko/merchant singkat; null kalau tidak ada), '
+            . '"kategori" (pilih SATU yang paling cocok dari daftar ini, tulis persis: ' . implode(', ', $kategori) . '; null kalau ragu). '
+            . 'Total adalah GRAND TOTAL / TOTAL BAYAR, bukan uang tunai yang diberikan atau kembalian. '
+            . 'Kalau gambar bukan struk, balas {"nominal": null}.';
+
+        $file = $request->file('foto');
+        $jawab = Gemini::bacaGambar($instruksi, $file->getMimeType() ?: 'image/jpeg', base64_encode((string) file_get_contents($file->getRealPath())));
+        $data = $jawab ? json_decode(preg_replace('/^```(?:json)?|```$/m', '', $jawab), true) : null;
+        if (! is_array($data)) {
+            return response()->json(['ok' => false, 'alasan' => 'ai-gagal']);
+        }
+
+        // rapikan & batasi hasil AI sebelum dipakai mengisi form
+        $nominal = is_numeric($data['nominal'] ?? null) ? (float) $data['nominal'] : null;
+        if ($nominal !== null && ($nominal < 100 || $nominal > 99999999)) {
+            $nominal = null;
+        }
+        $tanggal = is_string($data['tanggal'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['tanggal'])
+            && checkdate((int) substr($data['tanggal'], 5, 2), (int) substr($data['tanggal'], 8, 2), (int) substr($data['tanggal'], 0, 4))
+            && $data['tanggal'] <= $hariIni ? $data['tanggal'] : null;
+        $toko = is_string($data['toko'] ?? null) ? mb_substr(trim($data['toko']), 0, 80) : null;
+        $kat = is_string($data['kategori'] ?? null) && in_array($data['kategori'], $kategori, true) ? $data['kategori'] : null;
+
+        return response()->json([
+            'ok' => $nominal !== null,
+            'alasan' => $nominal === null ? 'total-tidak-terbaca' : null,
+            'sumber' => 'ai',
+            'nominal' => $nominal, 'tanggal' => $tanggal, 'toko' => $toko ?: null, 'kategori' => $kat,
+        ]);
     }
 }

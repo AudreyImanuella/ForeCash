@@ -1,4 +1,6 @@
 import './bootstrap';
+import { bacaTeksStruk } from './struk-parser';
+import QRCode from 'qrcode';
 
 // ===== Kolom kata sandi: tombol mata untuk lihat / sembunyikan =====
 // Pakai di Blade: <x-input-sandi id="password" name="password" />
@@ -296,34 +298,57 @@ function proyeksi(saldo, burn, hariIni, rencana, days = 30) {
     return hasil;
 }
 
-function gambarGrafik(el, data, gajianIndex) {
+const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const tglSedang = (t) => { const [, m, d] = t.split('-').map(Number); return `${d} ${BLN[m - 1]}`; };
+
+/** Grafik: garis biru = saldo (burn rate asli), oranye putus-putus = simulasi,
+ *  area pink = saldo habis sebelum pemasukan, garis hijau = tanggal pemasukan berikutnya. */
+function gambarGrafik(el, data, dataSim, gajianIndex) {
     // ukuran mengikuti kotaknya, supaya teks sumbu tidak ikut mengecil/membesar
-    const W = Math.max(280, el.clientWidth), H = Math.max(160, el.clientHeight), kiri = 48, bawah = 22, atas = 8, kanan = 8;
-    const maks = Math.max(1, ...data.map((p) => p.saldo));
+    const W = Math.max(280, el.clientWidth), H = Math.max(160, el.clientHeight), kiri = 52, bawah = 24, atas = 22, kanan = 10;
+    const puncak = Math.max(1, ...data.map((p) => p.saldo), ...(dataSim || []).map((p) => p.saldo));
+    // angka sumbu yang bulat: 0, 150rb, 300rb, ...
+    const kasar = puncak / 4, pangkat = 10 ** Math.floor(Math.log10(kasar));
+    const langkah = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map((k) => k * pangkat).find((k) => k >= kasar);
+    const maks = langkah * 4;
     const x = (i) => kiri + (i / (data.length - 1)) * (W - kiri - kanan);
     const y = (v) => atas + (1 - v / maks) * (H - atas - bawah);
-    const garis = data.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.saldo).toFixed(1)}`).join(' ');
+    const jalur = (d) => d.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.saldo).toFixed(1)}`).join(' ');
+    const garis = jalur(data);
     const isi = `${garis} L${x(data.length - 1)},${H - bawah} L${x(0)},${H - bawah} Z`;
+    const teks = (tx, ty, isi, ext = '') => `<text x="${tx}" y="${ty}" font-size="11.5" font-family="Spline Sans, sans-serif" ${ext}>${isi}</text>`;
     const grid = [0, 0.25, 0.5, 0.75, 1].map((r) => {
         const v = maks * r;
-        return `<line x1="${kiri}" x2="${W - kanan}" y1="${y(v)}" y2="${y(v)}" stroke="#F6EBCF"/>`
-            + `<text x="${kiri - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#8C7A63">${ringkasRupiah(v)}</text>`;
+        return `<line x1="${kiri}" x2="${W - kanan}" y1="${y(v)}" y2="${y(v)}" stroke="#EFE6D6"/>`
+            + teks(kiri - 8, y(v) + 4, ringkasRupiah(v), 'text-anchor="end" fill="#4A4F63"');
     }).join('');
     const tiap = W < 480 ? 10 : 5;
     const labelX = data.map((p, i) => (i % tiap === 0
-        ? `<text x="${x(i)}" y="${H - 4}" text-anchor="middle" font-size="11" fill="#8C7A63">${tglPendek(p.tanggal)}</text>` : '')).join('');
+        ? teks(x(i), H - 5, tglSedang(p.tanggal), `text-anchor="${i === data.length - 1 ? 'end' : 'middle'}" fill="#4A4F63"`) : '')).join('');
+
+    // area "saldo habis": dari hari pertama saldo 0 sampai pemasukan (atau akhir grafik)
+    const nol = data.findIndex((p, i) => i > 0 && p.saldo <= 0);
+    const ujung = gajianIndex !== null && gajianIndex <= 30 ? gajianIndex : data.length - 1;
+    let zona = '';
+    if (nol > 0 && nol < ujung) {
+        const zx = x(nol), zw = x(ujung) - zx;
+        zona = `<rect x="${zx}" y="${atas}" width="${zw}" height="${H - atas - bawah}" rx="6" fill="#FDDDEB" opacity=".7"/>`
+            + (zw > 64 ? teks(zx + zw / 2, H - bawah - 8, 'saldo habis', 'text-anchor="middle" font-weight="700" fill="#2B2F42"') : '');
+    }
     const gajian = gajianIndex !== null && gajianIndex <= 30
-        ? `<line x1="${x(gajianIndex)}" x2="${x(gajianIndex)}" y1="${atas}" y2="${H - bawah}" stroke="#E8A500" stroke-width="3"/>`
-          + `<text x="${x(gajianIndex) - 4}" y="${atas + 12}" text-anchor="end" font-size="11" font-weight="700" fill="#2D2216">Pemasukan</text>` : '';
-    const titik = data.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.saldo)}" r="8" fill="transparent"><title>${tglPendek(p.tanggal)}: Rp ${formatRibuan(p.saldo)}</title></circle>`).join('');
+        ? `<line x1="${x(gajianIndex)}" x2="${x(gajianIndex)}" y1="${atas}" y2="${H - bawah}" stroke="#14704F" stroke-width="2" stroke-dasharray="4 4"/>`
+          + teks(gajianIndex > 22 ? x(gajianIndex) - 6 : x(gajianIndex) + 6, atas - 8, 'pemasukan',
+              `font-weight="700" fill="#14704F" text-anchor="${gajianIndex > 22 ? 'end' : 'start'}"`) : '';
+    const sim = dataSim ? `<path d="${jalur(dataSim)}" fill="none" stroke="#FFA934" stroke-width="2.5" stroke-dasharray="6 5" stroke-linecap="round"/>` : '';
+    const titik = data.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.saldo)}" r="9" fill="transparent"><title>${tglSedang(p.tanggal)}: Rp ${formatRibuan(p.saldo)}`
+        + (dataSim ? ` (simulasi Rp ${formatRibuan(dataSim[i].saldo)})` : '') + '</title></circle>').join('');
 
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" aria-hidden="true">
-        <defs><linearGradient id="isiSaldo" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#FF8A1F" stop-opacity=".22"/><stop offset="100%" stop-color="#FF8A1F" stop-opacity=".02"/>
-        </linearGradient></defs>
-        ${grid}${labelX}${gajian}
-        <path d="${isi}" fill="url(#isiSaldo)"/>
-        <path d="${garis}" fill="none" stroke="#FF8A1F" stroke-width="2.5"/>
+        ${grid}${zona}${labelX}${gajian}
+        <path d="${isi}" fill="#00A0B5" opacity=".12"/>
+        ${sim}
+        <path d="${garis}" fill="none" stroke="#00A0B5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${x(0)}" cy="${y(data[0].saldo)}" r="5" fill="#00A0B5" stroke="#fff" stroke-width="2"/>
         ${titik}
     </svg>`;
 }
@@ -336,14 +361,26 @@ document.querySelectorAll('[data-proyeksi]').forEach((panel) => {
     const grafik = panel.querySelector('[data-grafik]');
     const input = panel.querySelector('[data-sim-burn]');
     const hasil = panel.querySelector('[data-sim-hasil]');
+    const dasar = () => proyeksi(saldo, burn, d.hari, rencana);
 
     const segarkan = () => {
         const sim = Number(input.value.replace(/\D/g, ''));
-        gambarGrafik(grafik, proyeksi(saldo, sim > 0 ? sim : burn, d.hari, rencana), sisaHari);
+        const beda = sim > 0 && Math.round(sim) !== Math.round(burn);
+        gambarGrafik(grafik, dasar(), beda ? proyeksi(saldo, sim, d.hari, rencana) : null, sisaHari);
         if (sim > 0) {
             const run = Math.floor(Math.max(0, saldo - rencanaDulu) / sim);
-            hasil.textContent = `Saldo bertahan ${run} hari` + (sisaHari !== null
-                ? (run >= sisaHari ? ' — aman sampai pemasukan berikutnya.' : ` — masih kurang ${sisaHari - run} hari.`) : '.');
+            const aman = sisaHari === null || run >= sisaHari;
+            const judul = sisaHari !== null && aman
+                ? `Cukup sampai ${tglSedang(tambahHari(d.hari, sisaHari))}`
+                : `Cukup sampai ${tglSedang(tambahHari(d.hari, run))}`;
+            let kalimat = sisaHari === null ? `Saldo bertahan ${run} hari.`
+                : aman ? 'Aman sampai pemasukan berikutnya datang.' : `Masih kurang ${sisaHari - run} hari sebelum pemasukan berikutnya.`;
+            if (burn > sim) kalimat += ` Hemat Rp ${formatRibuan(Math.round(burn - sim))} per hari dari sekarang.`;
+            hasil.innerHTML = '';
+            const b = document.createElement('b');
+            b.className = aman ? 'is-aman' : 'is-kurang';
+            b.textContent = judul;
+            hasil.append(b, document.createTextNode(kalimat));
         } else {
             hasil.textContent = '';
         }
@@ -428,4 +465,179 @@ document.addEventListener('submit', (e) => {
             return;
         }
     }
+});
+
+
+// ===== Scan struk: Gemini dulu, cadangannya tesseract.js di browser =====
+// Pakai di Blade: tombol [data-scan-struk] di dalam form [data-form-tx] yang punya data-scan-url.
+// Hasil hanya MENGISI form (nominal, tanggal, keterangan, kategori); user mengecek lalu menekan Simpan.
+// Foto yang di-scan juga dipasang ke kolom "bukti" supaya ikut tersimpan sebagai foto struk.
+const SCAN_SISI_MAKS = 1600;
+const SCAN_STRUK_MAKS = 2 * 1024 * 1024;
+const TESSERACT_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+// nama kategori dari parser cadangan -> kata kunci untuk mencari kategori milik user
+const KATA_KATEGORI = { 'Makan & Minum': ['makan', 'minum', 'food'], 'Transportasi': ['transport', 'ojek'], 'Kebutuhan Kuliah': ['kuliah', 'atk', 'fotokopi'], 'Hiburan': ['hiburan'], 'Kos / Sewa': ['kos', 'sewa'] };
+
+function muatGambarScan(file) {
+    return new Promise((ok, gagal) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); ok(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); gagal(new Error('gambar')); };
+        img.src = url;
+    });
+}
+function kanvasScan(img) {
+    const skala = Math.min(1, SCAN_SISI_MAKS / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.naturalWidth * skala));
+    c.height = Math.max(1, Math.round(img.naturalHeight * skala));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+}
+async function kanvasKeJpeg(c) {
+    for (const q of [0.82, 0.7, 0.55, 0.4]) {
+        const blob = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', q));
+        if (blob && blob.size <= SCAN_STRUK_MAKS) return new File([blob], 'struk.jpg', { type: 'image/jpeg' });
+    }
+    return null;
+}
+/** abu-abu + regangkan kontras supaya struk thermal yang pudar lebih mudah dibaca OCR */
+function kanvasUntukOcr(sumber) {
+    const c = document.createElement('canvas');
+    c.width = sumber.width; c.height = sumber.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(sumber, 0, 0);
+    const data = ctx.getImageData(0, 0, c.width, c.height), px = data.data, hist = new Uint32Array(256);
+    for (let i = 0; i < px.length; i += 4) { const g = Math.round(0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]); px[i] = g; hist[g]++; }
+    const total = px.length / 4;
+    let lo = 0, hi = 255, acc = 0;
+    for (let g = 0; g < 256; g++) { acc += hist[g]; if (acc >= total * 0.02) { lo = g; break; } }
+    acc = 0;
+    for (let g = 255; g >= 0; g--) { acc += hist[g]; if (acc >= total * 0.02) { hi = g; break; } }
+    const r = Math.max(1, hi - lo);
+    for (let i = 0; i < px.length; i += 4) { const g = Math.max(0, Math.min(255, ((px[i] - lo) * 255) / r)); px[i] = px[i + 1] = px[i + 2] = g; }
+    ctx.putImageData(data, 0, 0);
+    return c;
+}
+function muatTesseract() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    return new Promise((ok, gagal) => {
+        const s = document.createElement('script');
+        s.src = TESSERACT_CDN; s.async = true;
+        s.onload = () => (window.Tesseract ? ok(window.Tesseract) : gagal(new Error('tesseract')));
+        s.onerror = () => gagal(new Error('tesseract'));
+        document.head.appendChild(s);
+    });
+}
+async function scanCadangan(kanvas, lapor) {
+    const T = await muatTesseract();
+    const worker = await T.createWorker('eng', 1, {
+        logger: (m) => { if (m.status === 'recognizing text') lapor(`Membaca struk (mode cadangan)... ${Math.round(m.progress * 100)}%`); },
+    });
+    try {
+        const teks = (await worker.recognize(kanvasUntukOcr(kanvas))).data.text;
+        const h = bacaTeksStruk(teks);
+        return { ok: h.nominal != null, sumber: 'ocr', yakin: h.yakin, nominal: h.nominal, tanggal: h.tanggal, toko: h.toko, kategori: h.kategori };
+    } finally {
+        await worker.terminate();
+    }
+}
+function pilihKategori(select, nama) {
+    if (!select || !nama) return false;
+    const opsi = [...select.querySelectorAll('optgroup[data-jenis="pengeluaran"] option')];
+    const cari = nama.toLowerCase();
+    let cocok = opsi.find((o) => o.textContent.trim().toLowerCase() === cari);
+    if (!cocok) {
+        const kunci = KATA_KATEGORI[nama] ?? [cari];
+        cocok = opsi.find((o) => kunci.some((k) => o.textContent.toLowerCase().includes(k)));
+    }
+    if (cocok) select.value = cocok.value;
+    return !!cocok;
+}
+function isiDariStruk(form, h) {
+    const jenis = form.querySelector('[data-pilih-jenis]');
+    if (jenis && jenis.value !== 'pengeluaran') { jenis.value = 'pengeluaran'; jenis.dispatchEvent(new Event('change', { bubbles: true })); }
+    const nominal = form.querySelector('[name="nominal"]');
+    if (nominal && h.nominal) nominal.value = formatRibuan(Math.round(h.nominal));
+    const tanggal = form.querySelector('[name="tanggal"]');
+    if (tanggal && h.tanggal && (!tanggal.max || h.tanggal <= tanggal.max)) tanggal.value = h.tanggal;
+    const ket = form.querySelector('[name="keterangan"]');
+    if (ket && h.toko && !ket.value.trim()) ket.value = h.toko;
+    pilihKategori(form.querySelector('[data-pilih-kategori]'), h.kategori);
+}
+const rupiahTeks = (n) => 'Rp ' + formatRibuan(Math.round(n));
+
+document.querySelectorAll('[data-form-tx][data-scan-url]').forEach((form) => {
+    const tombol = form.querySelector('[data-scan-struk]');
+    const pilih = form.querySelector('[data-scan-input]');
+    const hasil = form.querySelector('[data-scan-hasil]');
+    const bukti = form.querySelector('[name="bukti"]');
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!tombol || !pilih || !hasil) return;
+
+    const tampil = (jenis, teks) => { hasil.hidden = false; hasil.dataset.jenis = jenis; hasil.textContent = teks; };
+    tombol.addEventListener('click', () => pilih.click());
+
+    pilih.addEventListener('change', async () => {
+        const file = pilih.files?.[0];
+        pilih.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) return tampil('gagal', 'File harus berupa foto (JPG, PNG, atau WEBP).');
+        tombol.disabled = true;
+        try {
+            tampil('proses', 'Menyiapkan foto...');
+            const kanvas = kanvasScan(await muatGambarScan(file));
+            const jpeg = await kanvasKeJpeg(kanvas);
+            if (!jpeg) return tampil('gagal', 'Foto terlalu besar. Coba foto yang lebih kecil.');
+            // pasang foto ke kolom bukti supaya ikut tersimpan sebagai foto struk
+            if (bukti) { const dt = new DataTransfer(); dt.items.add(jpeg); bukti.files = dt.files; }
+
+            // 1) Gemini
+            let h = null;
+            try {
+                tampil('proses', 'Membaca struk dengan AI...');
+                const fd = new FormData(); fd.append('foto', jpeg);
+                const res = await fetch(form.dataset.scanUrl, { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' } });
+                if (res.ok) h = await res.json();
+            } catch { h = null; }
+
+            // 2) cadangan: tesseract.js di browser
+            if (!h?.ok) {
+                tampil('proses', 'AI sedang tidak bisa dipakai, membaca struk dengan mode cadangan...');
+                try { h = await scanCadangan(kanvas, (t) => tampil('proses', t)); } catch { h = null; }
+            }
+
+            if (!h?.ok) return tampil('gagal', 'Total belanja tidak terbaca. Foto tetap terlampir; isi nominalnya manual ya. Tips: foto lurus, dekat, dan terang.');
+            isiDariStruk(form, h);
+            const bagian = [h.toko, rupiahTeks(h.nominal), h.tanggal ? h.tanggal.split('-').reverse().join('/') : null].filter(Boolean).join(' · ');
+            const cek = h.sumber === 'ocr' && h.yakin !== 'tinggi' ? ' Totalnya hanya tebakan, cek lagi ya.' : ' Cek lagi sebelum disimpan.';
+            tampil('ok', `Ketemu: ${bagian}.${cek}`);
+            form.querySelector('[name="nominal"]')?.focus();
+        } catch {
+            tampil('gagal', 'Struk gagal dibaca. Foto tetap terlampir; isi manual ya.');
+        } finally {
+            tombol.disabled = false;
+        }
+    });
+});
+
+
+// ===== Teman ForeCash: QR undangan & tombol bagikan link =====
+// QR digambar di browser dari link undangan (tidak lewat layanan QR pihak ketiga).
+document.querySelectorAll('canvas[data-qr]').forEach((kanvas) => {
+    QRCode.toCanvas(kanvas, kanvas.dataset.qr, { width: 104, margin: 1, color: { dark: '#2B2F42', light: '#FFFFFF' } })
+        .catch(() => { kanvas.hidden = true; });
+});
+// Bagikan: menu bagikan bawaan HP (Web Share API); di laptop pakai link WhatsApp
+document.addEventListener('click', async (e) => {
+    const tombol = e.target.closest('[data-bagikan]');
+    if (!tombol) return;
+    const url = tombol.dataset.bagikan;
+    const teks = tombol.dataset.teks ?? '';
+    if (navigator.share) {
+        try { await navigator.share({ title: 'Undangan teman ForeCash', text: teks, url }); return; }
+        catch (err) { if (err?.name === 'AbortError') return; }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(teks + url)}`, '_blank', 'noopener');
 });

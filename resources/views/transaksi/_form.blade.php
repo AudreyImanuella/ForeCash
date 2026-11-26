@@ -1,4 +1,4 @@
-{{-- Form transaksi (port dari transaksi/components/TxForm.tsx versi Next.js).
+{{-- Form transaksi — desain baru: kartu oranye lembut, kolom putih tanpa garis (port dari transaksi/components/TxForm.tsx versi Next.js).
      Dipakai di index (catat baru, $t = null) dan edit (ubah, $t = transaksi).
      Variabel: $aksi (URL), $t, $wallets, $kategori, $jenisAwal --}}
 @php
@@ -12,45 +12,48 @@
     $tujuanPilih = old('wallet_tujuan_id', $t?->wallet_tujuan_id ?? $wallets->get(1)?->id);
 @endphp
 
-<form method="POST" action="{{ $aksi }}" enctype="multipart/form-data" class="hs-card p-5 space-y-3" data-form-tx>
+<form method="POST" action="{{ $aksi }}" enctype="multipart/form-data" class="fx-form" data-form-tx
+      @if (! $t && Route::has('transaksi.scan')) data-scan-url="{{ route('transaksi.scan') }}" @endif>
     @csrf
     @if ($t) @method('PUT') @endif
 
-    <h4 class="text-sm font-black">{{ $t ? 'Ubah Transaksi' : 'Catat Transaksi' }}</h4>
+    @unless ($t)<x-tupai pose="koin" alt="" class="fx-form-tupai" />@endunless
+    <h2 class="fx-form-title">{{ $t ? 'Ubah transaksi' : 'Catat transaksi' }}</h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="fx-grid2">
         <div>
-            <label for="jenis" class="text-xs font-bold">Jenis</label>
-            <select id="jenis" name="jenis" class="w-full px-3 py-2.5 text-sm border" data-pilih-jenis>
+            <label for="jenis" class="fx-label">Jenis</label>
+            <select id="jenis" name="jenis" class="fx-input" data-pilih-jenis>
                 <option value="pengeluaran" @selected($jenis === 'pengeluaran')>Pengeluaran</option>
                 <option value="pemasukan" @selected($jenis === 'pemasukan')>Pemasukan</option>
                 <option value="transfer" @selected($jenis === 'transfer')>Transfer antar wallet</option>
             </select>
-            @error('jenis') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+            @error('jenis') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
         <div>
-            <label for="nominal" class="text-xs font-bold">Nominal (Rp)</label>
+            <label for="nominal" class="fx-label">Nominal</label>
             {{-- type="text" + inputmode="numeric": supaya bisa diberi titik ribuan, tapi HP tetap membuka keyboard angka --}}
+            <div class="fx-rp"><span aria-hidden="true">Rp</span>
             <input id="nominal" name="nominal" type="text" inputmode="numeric" autocomplete="off" required
-                   value="{{ $nominalAwal }}" placeholder="Contoh: 25.000" class="w-full px-3 py-2.5 text-sm border" data-rupiah>
-            @error('nominal') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+                   value="{{ $nominalAwal }}" placeholder="25.000" class="fx-input fx-input-big" data-rupiah></div>
+            @error('nominal') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
     </div>
 
     <div>
-        <label for="keterangan" class="text-xs font-bold">
-            Keterangan <span class="font-normal text-slate-400">(opsional · kosong = pakai nama kategori)</span>
+        <label for="keterangan" class="fx-label">
+            Keterangan <span class="fx-label-opt">(opsional · kosong = pakai nama kategori)</span>
         </label>
         <input id="keterangan" name="keterangan" maxlength="150" value="{{ old('keterangan', $t?->keterangan) }}"
-               placeholder="Contoh: Makan siang kantin" class="w-full px-3 py-2.5 text-sm border">
-        @error('keterangan') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+               placeholder="Contoh: Makan siang kantin" class="fx-input">
+        @error('keterangan') <p class="fx-error">{{ $message }}</p> @enderror
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="fx-grid2">
         {{-- kategori: disembunyikan saat transfer --}}
         <div data-bukan-transfer @if ($transfer) hidden @endif>
-            <label for="category_id" class="text-xs font-bold">Kategori</label>
-            <select id="category_id" name="category_id" class="w-full px-3 py-2.5 text-sm border" data-pilih-kategori>
+            <label for="category_id" class="fx-label">Kategori</label>
+            <select id="category_id" name="category_id" class="fx-input" data-pilih-kategori>
                 @foreach (['pengeluaran' => 'Pengeluaran', 'pemasukan' => 'Pemasukan'] as $j => $label)
                     <optgroup label="{{ $label }}" data-jenis="{{ $j }}">
                         @foreach ($kategori->where('jenis', $j) as $c)
@@ -59,49 +62,61 @@
                     </optgroup>
                 @endforeach
             </select>
-            @error('category_id') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+            @error('category_id') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
         <div>
-            <label for="tanggal" class="text-xs font-bold">Tanggal</label>
+            <label for="tanggal" class="fx-label">Tanggal</label>
             <input id="tanggal" type="date" name="tanggal" required max="{{ \App\Support\Format::hariIni() }}"
                    value="{{ old('tanggal', $t?->tanggal?->toDateString() ?? \App\Support\Format::hariIni()) }}"
-                   class="w-full px-3 py-2.5 text-sm border">
-            @error('tanggal') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+                   class="fx-input">
+            @error('tanggal') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="fx-grid2">
         <div>
-            <label for="wallet_id" class="text-xs font-bold" data-label-wallet>{{ $transfer ? 'Dari wallet' : 'Wallet' }}</label>
-            <select id="wallet_id" name="wallet_id" class="w-full px-3 py-2.5 text-sm border">
+            <label for="wallet_id" class="fx-label" data-label-wallet>{{ $transfer ? 'Dari wallet' : 'Wallet' }}</label>
+            <select id="wallet_id" name="wallet_id" class="fx-input">
                 @foreach ($wallets as $w)
                     <option value="{{ $w->id }}" @selected((string) $walletPilih === (string) $w->id)>
                         {{ $w->nama }} ({{ \App\Support\Format::rupiah($w->saldo_sekarang) }})
                     </option>
                 @endforeach
             </select>
-            @error('wallet_id') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+            @error('wallet_id') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
         {{-- wallet tujuan: hanya saat transfer --}}
         <div data-hanya-transfer @if (! $transfer) hidden @endif>
-            <label for="wallet_tujuan_id" class="text-xs font-bold">Ke wallet</label>
-            <select id="wallet_tujuan_id" name="wallet_tujuan_id" class="w-full px-3 py-2.5 text-sm border">
+            <label for="wallet_tujuan_id" class="fx-label">Ke wallet</label>
+            <select id="wallet_tujuan_id" name="wallet_tujuan_id" class="fx-input">
                 @foreach ($wallets as $w)
                     <option value="{{ $w->id }}" @selected((string) $tujuanPilih === (string) $w->id)>{{ $w->nama }}</option>
                 @endforeach
             </select>
-            <p class="text-[10px] text-slate-500 mt-1">Transfer tidak dihitung sebagai pemasukan/pengeluaran.</p>
-            @error('wallet_tujuan_id') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+            <p class="fx-hint">Transfer tidak dihitung sebagai pemasukan/pengeluaran.</p>
+            @error('wallet_tujuan_id') <p class="fx-error">{{ $message }}</p> @enderror
         </div>
     </div>
 
+    {{-- Scan struk: foto dibaca AI (Gemini), cadangannya OCR di browser; hasilnya mengisi form di atas --}}
+    @unless ($t)
+        <div class="fx-scan">
+            <button type="button" class="fx-scan-btn" data-scan-struk>
+                <span class="fx-scan-ic"><x-ikon nama="scan-line" :size="22" :tebal="2.4" /></span>
+                <span><b>Scan struk</b><small>Foto struk, nominal &amp; tanggal terisi otomatis</small></span>
+            </button>
+            <input type="file" accept="image/*" capture="environment" class="sr-only" data-scan-input tabindex="-1" aria-hidden="true">
+            <p class="fx-scan-hasil" data-scan-hasil hidden aria-live="polite"></p>
+        </div>
+    @endunless
+
     <div>
-        <label for="bukti" class="text-xs font-bold">
-            Foto struk <span class="font-normal text-slate-400">(opsional · JPG/JPEG/PNG, maks. 2 MB)</span>
+        <label for="bukti" class="fx-label">
+            {{ $t ? 'Foto struk' : 'Atau lampirkan foto saja' }} <span class="fx-label-opt">(opsional · JPG/JPEG/PNG, maks. 2 MB)</span>
         </label>
         <input id="bukti" type="file" name="bukti" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-               class="w-full px-3 py-2 text-xs border bg-white">
-        @error('bukti') <p class="text-xs font-bold text-hsRed mt-1">{{ $message }}</p> @enderror
+               class="fx-file">
+        @error('bukti') <p class="fx-error">{{ $message }}</p> @enderror
 
         @if ($t?->bukti)
             <div class="flex items-center gap-3 mt-2">
@@ -116,11 +131,11 @@
     </div>
 
     @if ($t)
-        <div class="flex gap-2">
-            <a href="{{ route('transaksi.index', ['bulan' => $t->tanggal->format('Y-m')]) }}" class="hs-btn bg-slate-200 px-4 py-3 text-sm">Batal</a>
-            <button type="submit" class="hs-btn bg-hsBlue text-white flex-1 py-3 text-sm">Simpan Perubahan</button>
+        <div class="fx-btn-row">
+            <a href="{{ route('transaksi.index', ['bulan' => $t->tanggal->format('Y-m')]) }}" class="fb-btn fb-btn-light">Batal</a>
+            <button type="submit" class="fb-btn fb-btn-dark fx-submit">Simpan perubahan</button>
         </div>
     @else
-        <button type="submit" class="hs-btn bg-hsOrange text-white w-full py-3 text-sm">Simpan Transaksi</button>
+        <button type="submit" class="fb-btn fb-btn-dark fx-submit">Simpan transaksi</button>
     @endif
 </form>

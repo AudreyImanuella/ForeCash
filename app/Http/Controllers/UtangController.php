@@ -209,7 +209,29 @@ class UtangController extends Controller
         $user->teman()->syncWithoutDetaching([$dia->id]);
         $dia->teman()->syncWithoutDetaching([$user->id]);
 
-        return back()->with('sukses', 'Sekarang kamu berteman dengan ' . $dia->name . '.');
+        $pesan = 'Sekarang kamu berteman dengan ' . $dia->name . '.';
+
+        // dari halaman undangan: kembali ke Utang & Patungan, bukan ke halaman undangan lagi
+        return $request->boolean('dari_undangan')
+            ? redirect()->route('utang.index')->with('sukses', $pesan)
+            : back()->with('sukses', $pesan);
+    }
+
+    /** Halaman konfirmasi dari link undangan /teman/tambah/{kode} (dibuka lewat QR atau link yang dibagikan). */
+    public function undangan(Request $request, string $kode): View
+    {
+        $user = $request->user();
+        $kode = preg_replace('/[^A-Z0-9]/', '', strtoupper($kode));
+        $dia = strlen($kode) === 6 ? User::where('kode_teman', $kode)->where('role', 'mahasiswa')->first() : null;
+
+        $status = match (true) {
+            ! $dia => 'tidak-ada',
+            $dia->id === $user->id => 'diri-sendiri',
+            $user->teman()->where('users.id', $dia->id)->exists() => 'sudah',
+            default => 'baru',
+        };
+
+        return view('utang.undangan', compact('dia', 'kode', 'status'));
     }
 
     public function hapusTeman(Request $request, User $teman): RedirectResponse
