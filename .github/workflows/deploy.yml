@@ -82,3 +82,6 @@ jobs:
             **/*.log
             phpunit.xml
             .phpunit.result.cache
+            **/*.zip
+            **/*.sql
+            README.md
