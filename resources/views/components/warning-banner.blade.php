@@ -11,7 +11,7 @@
     $KATA = ['aman' => 'Aman, lanjutkan!', 'waspada' => 'Pelan-pelan ya...', 'kritis' => 'Gawat, rem dulu!'];
     $BUKIT1 = ['aman' => '#7FD6A0', 'waspada' => '#F4B860', 'kritis' => '#A79FCB'];
     $BUKIT2 = ['aman' => '#4CC283', 'waspada' => '#E89A3C', 'kritis' => '#8C83B8'];
-    $MOOD = ['aman' => 'happy', 'waspada' => 'neutral', 'kritis' => 'worried'];
+    $POSE = ['aman' => 'senang', 'waspada' => 'cemas', 'kritis' => 'nangis'];
 
     // hari-hari menuju pemasukan berikutnya: koin = hari yang masih tertutup saldo
     $hariIni = Format::hariIni();
@@ -109,10 +109,10 @@
         @endif
     </div>
 
-    {{-- maskot bereaksi: ekspresi avatar mengikuti status keuangan --}}
+    {{-- maskot tupai bereaksi: ekspresinya mengikuti status keuangan --}}
     <div class="fc-hero-mascot">
         <div class="fc-bubble">{{ $KATA[$st] }}</div>
-        <div class="fc-hero-avatar character-bounce"><x-avatar :id="$avatar" :mood="$MOOD[$st]" :size="136" /></div>
+        <x-tupai :pose="$POSE[$st]" :alt="'Tupai ' . $LABEL[$st]" class="fc-hero-tupai character-bounce" loading="eager" />
         {{-- teman hemat yang sedang menemani (fitur Petualangan) --}}
         @if ($pet && isset(\App\Support\Pets::PETS[$pet]) && Route::has('petualangan'))
             <a href="{{ route('petualangan') }}" class="fc-hero-buddy" title="{{ \App\Support\Pets::PETS[$pet]['nama'] }} menemanimu">

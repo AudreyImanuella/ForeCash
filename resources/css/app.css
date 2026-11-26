@@ -420,6 +420,7 @@ label.text-xs, .text-xs.font-bold { color: var(--ink); }
 .fc-bubble { position: relative; background: #fff; border-radius: 16px; padding: 7px 14px; font-size: 13px; font-weight: 800; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
 .fc-bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 3px; }
 .fc-hero-avatar svg { width: 92%; height: auto; }
+.fc-hero-tupai { width: 160px; height: 160px; filter: drop-shadow(0 8px 10px rgba(80, 40, 0, .18)); }
 .fc-hero-avatar { width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,.85); border: 5px solid #fff; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
 
 @media (max-width: 640px) {
@@ -427,6 +428,7 @@ label.text-xs, .text-xs.font-bold { color: var(--ink); }
     .fc-hero-mascot { position: absolute; right: 12px; top: 14px; }
     .fc-hero-mascot .fc-bubble { display: none; }
     .fc-hero-avatar { width: 76px; height: 76px; border-width: 3px; }
+    .fc-hero-tupai { width: 84px; height: 84px; }
     .fc-hero-text { padding-right: 0; }
     .fc-hero h2 { padding-right: 84px; }
     .fc-days-head { flex-direction: column; gap: 2px; }

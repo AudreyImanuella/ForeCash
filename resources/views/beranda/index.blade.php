@@ -152,7 +152,7 @@
                 <p class="font-display font-extrabold text-base {{ $WARNA_TX[$t->jenis] }}">{{ $TANDA_TX[$t->jenis] }}{{ Format::rupiah($t->nominal) }}</p>
             </div>
         @empty
-            <p class="text-sm text-slate-500 py-3">Belum ada transaksi. Mulai dari tombol "Mau catat apa?" di atas.</p>
+            <x-kosong judul="Belum ada transaksi">Mulai dari tombol "Mau catat apa?" di atas.</x-kosong>
         @endforelse
     </section>
 @endsection

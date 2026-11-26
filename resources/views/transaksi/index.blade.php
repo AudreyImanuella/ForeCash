@@ -61,7 +61,7 @@
                         </div>
                     </div>
                 @empty
-                    <p class="text-xs text-slate-500">Belum ada transaksi di bulan ini.</p>
+                    <x-kosong judul="Belum ada transaksi di bulan ini">Tenang dulu, lalu catat pengeluaran pertamamu.</x-kosong>
                 @endforelse
             </div>
         </div>

@@ -31,7 +31,7 @@
                     @endif
                 </div>
                 @if (! count($baris))
-                    <p class="text-xs text-slate-500">Belum ada anggaran. Tentukan batas belanja per kategori supaya tahu kapan harus mengerem.</p>
+                    <x-kosong judul="Belum ada anggaran">Tentukan batas belanja per kategori supaya tahu kapan harus mengerem.</x-kosong>
                 @endif
                 @foreach ($baris as $a)
                     @php

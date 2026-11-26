@@ -9,7 +9,8 @@
     @foreach ($badges as $b)
         {{-- satu template per badge; JavaScript menampilkan yang naik tingkat --}}
         <template data-badge="{{ $b['key'] }}">
-            <x-badge-ikon :ikon="$b['key']" :tingkat="$b['tingkat']" :size="56" />
+            <x-tupai pose="bangga" class="w-14 h-14 shrink-0" />
+            <x-badge-ikon :ikon="$b['key']" :tingkat="$b['tingkat']" :size="44" />
             <div class="min-w-0 flex-1">
                 <p class="text-[11px] font-black text-hsOrange tracking-wide">BADGE BARU!</p>
                 <p class="font-black text-sm">{{ $b['nama'] }} · {{ Gamify::TINGKAT[$b['tingkat']] }}</p>

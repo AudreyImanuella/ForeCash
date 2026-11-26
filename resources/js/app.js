@@ -110,7 +110,9 @@ document.addEventListener('click', (e) => {
 function htmlBot(teks) {
     const aman = teks.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     return aman
+        .replace(/^\s*[*-]\s+/gm, '• ')   // poin daftar dari jawaban AI
         .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/(^|\s)_([^_\n]+)_(?=\s|$)/g, '$1<i class="text-slate-400">$2</i>')
         .replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, '<a href="$2" class="underline font-bold">$1</a>')
         .replace(/\n/g, '<br>');
 }
@@ -124,6 +126,7 @@ document.querySelectorAll('[data-chatbot]').forEach((bot) => {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     const POS_KEY = 'forecash_bot_pos';
     let menunggu = false;
+    const riwayat = [];   // dikirim ke server supaya AI ingat percakapan sebelumnya
     let pos;
 
     // posisi tombol: dibatasi supaya tetap di layar (dan tidak menutupi tab bar di HP)
@@ -178,17 +181,19 @@ document.querySelectorAll('[data-chatbot]').forEach((bot) => {
         menunggu = true;
         const tunggu = document.createElement('p');
         tunggu.className = 'text-slate-500 pl-2';
-        tunggu.textContent = 'Sedang menghitung...';
+        tunggu.textContent = 'Tupai sedang berpikir...';
         list.append(tunggu);
         try {
             const res = await fetch(bot.dataset.url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ pesan: teks }),
+                body: JSON.stringify({ pesan: teks, riwayat: riwayat.slice(-8) }),
             });
             const j = await res.json();
             tunggu.remove();
-            tambahPesan('bot', j.jawaban ?? j.error ?? j.message ?? 'Terjadi kesalahan.');
+            // sumber 'aturan' = AI sedang tidak tersedia, jawaban dari template otomatis
+            tambahPesan('bot', (j.jawaban && j.sumber === 'aturan' && bot.dataset.ai === '1' ? '_(AI sedang sibuk, ini jawaban otomatis)_\n' : '') + (j.jawaban ?? j.error ?? j.message ?? 'Terjadi kesalahan.'));
+            if (j.jawaban) riwayat.push({ dari: 'user', teks }, { dari: 'bot', teks: j.jawaban });
         } catch {
             tunggu.remove();
             tambahPesan('bot', 'Maaf, aku tidak bisa terhubung ke server. Coba lagi sebentar.');

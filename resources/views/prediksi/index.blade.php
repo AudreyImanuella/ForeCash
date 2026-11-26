@@ -79,7 +79,7 @@
                     </div>
                 </div>
             @empty
-                <p class="text-xs text-slate-500">Belum ada jadwal. Tambahkan uang saku, honor, atau beasiswa agar peringatan bisa dihitung.</p>
+                <x-kosong judul="Belum ada jadwal pemasukan">Tambahkan uang saku, honor, atau beasiswa agar peringatan bisa dihitung.</x-kosong>
             @endforelse
         </div>
 
