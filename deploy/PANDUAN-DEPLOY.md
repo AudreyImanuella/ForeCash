@@ -33,9 +33,10 @@ InfinityFree tidak punya SSH, Composer, atau `php artisan`. Karena itu semua dis
 
 1. **Database:** buka **phpMyAdmin** dari panel, pilih database tadi, lalu **Import** file `forecash-database.sql`.
 2. **File:** buka **File Manager** (atau pakai FileZilla dengan data FTP dari panel). Masuk ke folder `htdocs`, hapus file bawaan (`index2.html` dan sejenisnya), unggah `forecash-upload.zip`, lalu **Extract** di dalam `htdocs`.
+   Pastikan hasil ekstrak **tidak** masuk ke folder baru `htdocs/htdocs` (isi tujuan ekstrak dengan `/htdocs`). Kalau terlanjur, pindahkan (Move) isinya ke `htdocs`.
    Kalau File Manager tidak bisa mengekstrak, ekstrak ZIP di laptop dan unggah isi foldernya lewat FileZilla.
    Hasil akhirnya harus begini: di dalam `htdocs` langsung ada `.htaccess`, `app/`, `public/`, `vendor/`, dan seterusnya.
-3. **`.env` produksi:** di `htdocs`, buat file baru bernama `.env` dan isi sendiri:
+3. **Konfigurasi produksi:** File Manager InfinityFree tidak bisa membuat file bernama `.env`, jadi buat file **`env.txt`** di `htdocs` (sejajar dengan `app` dan `vendor`, jangan di-rename). Laravel otomatis membacanya kalau `.env` tidak ada (lihat `bootstrap/app.php`). Isi sendiri:
    ```
    APP_NAME=ForeCash
    APP_ENV=production
@@ -59,7 +60,12 @@ InfinityFree tidak punya SSH, Composer, atau `php artisan`. Karena itu semua dis
    QUEUE_CONNECTION=sync
    FILESYSTEM_DISK=local
    MAIL_MAILER=log
+
+   # chatbot AI (opsional, key dari aistudio.google.com)
+   GEMINI_API_KEY=
+   GEMINI_MODEL=gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3.8-flash
    ```
+   Cek keamanan: `http://subdomainmu/env.txt` harus menampilkan 404.
 4. Buka subdomainnya di browser, lalu login dengan `demo@forecash.id` / `demo12345`.
 
 ## D. Update setelah ada perubahan kode
@@ -70,7 +76,7 @@ Jalankan perintah berikut. Kalau database tidak berubah, `-TanpaDatabase` membua
 powershell -ExecutionPolicy Bypass -File deploy\buat-paket.ps1 -TanpaDatabase
 ```
 
-Lalu unggah dan ekstrak lagi ZIP-nya. `.env` di hosting tidak akan tertimpa karena tidak ikut di ZIP. Setelah itu hapus isi `storage/framework/views/` di hosting supaya tampilan lama tidak tersimpan.
+Lalu unggah dan ekstrak lagi ZIP-nya. `env.txt` di hosting tidak akan tertimpa karena tidak ikut di ZIP. Setelah itu hapus isi `storage/framework/views/` di hosting supaya tampilan lama tidak tersimpan.
 
 ## Kalau ada masalah
 
@@ -79,4 +85,8 @@ Lalu unggah dan ekstrak lagi ZIP-nya. `.env` di hosting tidak akan tertimpa kare
 | Error 500 | `.env` belum ada atau `APP_KEY` kosong. Ubah sementara `APP_DEBUG=true` untuk melihat pesan aslinya, lalu kembalikan ke `false`. |
 | "SQLSTATE … Connection refused" | `DB_HOST` diisi `localhost`. Harus pakai MySQL Host Name dari panel. |
 | Tampilan tanpa CSS | Folder `public/build` tidak terunggah, atau `APP_URL` salah (http/https). |
+| Error 500 "Please provide a valid cache path" | Folder `storage/framework/views`, `sessions`, atau `cache/data` hilang. Buat manual di File Manager. |
+| "No application encryption key" | `env.txt` tidak ada atau `APP_KEY` kosong. Cek dengan membuka `env.txt` di File Manager. |
+| Chatbot "tidak bisa terhubung ke server" | Firewall InfinityFree memblokir alamat yang mengandung kata "bot". Chatbot sudah memakai alamat `/asisten`; jangan diganti kembali ke `/chatbot`. |
+| Chatbot selalu "AI sedang sibuk" | Lihat baris `Gemini ... gagal` di `storage/logs/laravel.log` (503 = model penuh, 429 = kuota habis, 404 = nama model salah). |
 | Error 419 saat login | `APP_URL` tidak sama dengan alamat yang dibuka. Buka lewat alamat yang persis sama, termasuk https. |

@@ -41,7 +41,13 @@ class ChatbotController extends Controller
     /** Riwayat percakapan dari browser: maksimal 8 pesan terakhir, tiap pesan dipotong 500 karakter. */
     private function riwayat(Request $request): array
     {
-        return collect($request->input('riwayat', []))
+        // browser mengirim riwayat sebagai teks JSON di dalam form biasa
+        $riwayat = $request->input('riwayat', []);
+        if (is_string($riwayat)) {
+            $riwayat = json_decode($riwayat, true) ?: [];
+        }
+
+        return collect(is_array($riwayat) ? $riwayat : [])
             ->filter(fn ($r) => is_array($r) && in_array($r['dari'] ?? null, ['user', 'bot'], true) && is_string($r['teks'] ?? null))
             ->map(fn ($r) => ['dari' => $r['dari'], 'teks' => mb_substr($r['teks'], 0, 500)])
             ->take(-8)->values()->all();

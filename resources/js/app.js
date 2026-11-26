@@ -184,10 +184,11 @@ document.querySelectorAll('[data-chatbot]').forEach((bot) => {
         tunggu.textContent = 'Tupai sedang berpikir...';
         list.append(tunggu);
         try {
+            // dikirim sebagai form biasa (bukan JSON): firewall hosting gratis (InfinityFree) memblokir POST berisi JSON
             const res = await fetch(bot.dataset.url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ pesan: teks, riwayat: riwayat.slice(-8) }),
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                body: new URLSearchParams({ pesan: teks, riwayat: JSON.stringify(riwayat.slice(-8)) }),
             });
             const j = await res.json();
             tunggu.remove();

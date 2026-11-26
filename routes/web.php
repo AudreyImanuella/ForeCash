@@ -103,8 +103,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/petualangan/pakai', [PetualanganController::class, 'pakai'])->name('petualangan.pakai');
         Route::get('/pencapaian', [PetualanganController::class, 'pencapaian'])->name('pencapaian');
 
-        // ForeCash Assistant (chatbot berbasis aturan)
-        Route::post('/chatbot', ChatbotController::class)->middleware('throttle:30,1')->name('chatbot');
+        // ForeCash Assistant (AI Gemini + jawaban cadangan). Alamatnya /asisten, bukan /chatbot: firewall InfinityFree memblokir alamat yang mengandung "bot"
+        Route::post('/asisten', ChatbotController::class)->middleware('throttle:30,1')->name('chatbot');
     });
 
     Route::middleware(CekPeran::class . ':orangtua')->group(function () {
