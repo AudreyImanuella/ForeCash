@@ -27,3 +27,7 @@ yarn-error.log
 /deploy/*.zip
 /deploy/*.sql
 /env.txt
+
+/deploy/paket/
+/deploy/forecash-upload.zip
+/deploy/forecash-database.sql

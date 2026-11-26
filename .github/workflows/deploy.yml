@@ -1,0 +1,84 @@
+# Deploy otomatis ForeCash ke InfinityFree setiap kali push ke branch main.
+# Taruh file ini di: .github/workflows/deploy.yml
+#
+# Yang dilakukan:
+#   1. build CSS & JS (npm run build)  -> public/build
+#   2. composer install tanpa paket dev -> vendor/
+#   3. upload lewat FTP ke htdocs (hanya file yang berubah sejak upload terakhir)
+#
+# Rahasia yang harus diisi di GitHub (Settings > Secrets and variables > Actions):
+#   FTP_USERNAME  -> username FTP dari panel InfinityFree (if0_...)
+#   FTP_PASSWORD  -> password akun hosting
+#
+# Yang TIDAK pernah di-upload / ditimpa: env.txt dan .env (konfigurasi produksi),
+# isi storage/ (foto bukti struk, log, sesi), tests/, deploy/, node_modules/.
+
+name: Deploy ke InfinityFree
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # bisa juga dijalankan manual dari tab Actions
+
+concurrency:
+  group: deploy-infinityfree
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build CSS & JS
+        run: |
+          npm ci
+          npm run build
+
+      - name: Siapkan PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Composer install (tanpa paket dev)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Pasang .htaccess root (meneruskan request ke public/)
+        run: cp deploy/htaccess-root.txt .htaccess
+
+      - name: Upload ke InfinityFree (FTP)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftpupload.net
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          server-dir: /htdocs/
+          timeout: 120000
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            node_modules/**
+            tests/**
+            deploy/**
+            .env
+            .env.*
+            env.txt
+            storage/**
+            bootstrap/cache/*.php
+            public/hot
+            public/storage
+            **/*.log
+            phpunit.xml
+            .phpunit.result.cache
