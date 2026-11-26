@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\PantauController;
+use App\Http\Controllers\TransaksiController;
 use App\Http\Middleware\CekPeran;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,12 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(CekPeran::class . ':mahasiswa')->group(function () {
         Route::get('/beranda', [BerandaController::class, 'index'])->name('beranda');
+
+        // Transaksi: daftar, simpan, ubah, hapus (+ foto struk yang hanya bisa dilihat pemiliknya)
+    Route::resource('transaksi', TransaksiController::class)
+        ->except(['create', 'show'])
+        ->parameters(['transaksi' => 'transaksi']);
+    Route::get('/transaksi/{transaksi}/struk', [TransaksiController::class, 'struk'])->name('transaksi.struk');
     });
 
     Route::middleware(CekPeran::class . ':orangtua')->group(function () {
