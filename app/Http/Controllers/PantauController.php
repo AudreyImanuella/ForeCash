@@ -33,6 +33,8 @@ class PantauController extends Controller
                 'keluar' => (float) ($ringkas['pengeluaran'] ?? 0),
                 'transaksi' => $anak->transactions()->with('category')->where('jenis', '!=', 'transfer')
                     ->orderByDesc('tanggal')->orderByDesc('id')->limit(8)->get(),
+                'laporan' => \App\Support\Laporan::untuk($anak, $bulanIni),
+                'namaBulan' => Format::namaBulan($bulanIni),
             ];
         }
 

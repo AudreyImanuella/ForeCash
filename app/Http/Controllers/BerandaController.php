@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Forecast;
+use App\Support\Gamify;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -35,8 +36,12 @@ class BerandaController extends Controller
         $tagihanTeman = $user->debts()
             ->where('arah', 'utang')->where('status', 'belum')->whereNotNull('teman_id')->count();
 
+        // gamifikasi (streak, level, badge, tantangan) & teman hemat yang menemani
+        $g = Gamify::untuk($user);
+        $petDipakai = $user->pets()->where('dipakai', true)->value('pet_id');
+
         return view('beranda.index', compact(
-            'user', 'wallets', 'f', 'transaksi', 'piutang', 'utang', 'rencanaDekat', 'targetAktif', 'tagihanTeman'
+            'user', 'wallets', 'f', 'transaksi', 'piutang', 'utang', 'rencanaDekat', 'targetAktif', 'tagihanTeman', 'g', 'petDipakai'
         ));
     }
 }

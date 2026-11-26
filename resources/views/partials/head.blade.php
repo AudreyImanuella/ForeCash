@@ -2,7 +2,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>{{ trim($__env->yieldContent('judul')) ? trim($__env->yieldContent('judul')) . ' — ' : '' }}ForeCash</title>
+{{-- isi @section('judul', '...') sudah di-escape oleh Blade, jadi di sini dicetak apa adanya supaya "&" tidak jadi "&amp;amp;" --}}
+<title>{!! trim($__env->yieldContent('judul')) ? trim($__env->yieldContent('judul')) . ' — ' : '' !!}ForeCash</title>
 <meta name="description" content="ForeCash: aplikasi web peringatan dini keuangan untuk mahasiswa.">
 <meta name="theme-color" content="#FF8A1F">
 @stack('meta')

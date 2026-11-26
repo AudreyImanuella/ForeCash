@@ -90,13 +90,13 @@
         </nav>
 
         <div class="fc-side-foot">
-            <div class="fc-me fc-me-static" title="Akun">
+            <a href="{{ route('akun') }}" class="fc-me {{ request()->routeIs('akun') ? 'is-active' : '' }}" title="Akun" @if (request()->routeIs('akun')) aria-current="page" @endif>
                 <span class="fc-me-avatar"><x-avatar :id="$user->avatar" :size="40" /></span>
                 <span class="fc-nav-label min-w-0">
                     <span class="fc-me-name">{{ $user->name }}</span>
                     <span class="fc-me-role">{{ $namaPeran }} · Akun</span>
                 </span>
-            </div>
+            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="fc-logout" title="Keluar">
@@ -119,7 +119,7 @@
                 <p class="fc-top-date">{{ \App\Support\Format::tglPanjang(\App\Support\Format::hariIni()) }}</p>
                 <h1 class="fc-top-title">@yield('judul_halaman', 'ForeCash')</h1>
             </div>
-            <span class="fc-top-avatar" aria-hidden="true"><x-avatar :id="$user->avatar" :size="40" /></span>
+            <a href="{{ route('akun') }}" class="fc-top-avatar" aria-label="Akun"><x-avatar :id="$user->avatar" :size="40" /></a>
         </header>
 
         <main class="fc-content">
@@ -148,6 +148,11 @@
             <span>Menu</span>
         </button>
     </nav>
+
+    {{-- ForeCash Assistant (chatbot), khusus mahasiswa --}}
+    @if ($user->isMahasiswa() && Route::has('chatbot'))
+        @include('partials.chatbot')
+    @endif
 </div>
 </body>
 </html>

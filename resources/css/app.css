@@ -638,7 +638,7 @@ canvas { max-width: 100%; }
     padding: 4px 12px 4px 4px; border-radius: 999px; font-size: 12px; font-weight: 700;
     background: var(--paper); border: 2px solid var(--line); color: var(--ink);
 }
-.fc-chip-teman.is-on { background: #EEE8FF; border-color: var(--grape); color: var(--grape-dark); }
+.fc-chip-teman.is-on, .fc-chip-teman:has(input:checked) {background: #EEE8FF; border-color: var(--grape); color: var(--grape-dark); }
 .fc-chip-teman:focus-within { outline: 3px solid var(--sky); outline-offset: 2px; }
 .fc-chip-av { width: 30px; height: 30px; border-radius: 50%; background: var(--paper-2); overflow: hidden; display: inline-flex; align-items: flex-end; justify-content: center; flex-shrink: 0; }
 

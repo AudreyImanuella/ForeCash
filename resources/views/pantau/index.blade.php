@@ -1,5 +1,4 @@
-{{-- Pantau Anak, khusus orang tua (port dari app/(app)/pantau/page.tsx versi Next.js).
-     Laporan bulanan per kategori menyusul saat fitur Laporan dibuat. --}}
+{{-- Pantau Anak, khusus orang tua (port dari app/(app)/pantau/page.tsx versi Next.js). --}}
 @extends('layouts.app')
 @use('App\Support\Format')
 
@@ -55,5 +54,8 @@
                 <p class="text-xs text-slate-500">Belum ada transaksi.</p>
             @endforelse
         </div>
+
+        <h3 class="text-sm font-black">Laporan {{ $data['namaBulan'] }}</h3>
+        <x-laporan-bulanan :r="$data['laporan']" />
     @endif
 @endsection

@@ -73,9 +73,12 @@
         </div>
 
         @if ($mode === 'masuk')
-            <label class="flex items-center gap-2 text-xs font-bold">
-                <input type="checkbox" name="ingat" value="1"> Ingat saya di perangkat ini
-            </label>
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+                <label class="flex items-center gap-2 text-xs font-bold">
+                    <input type="checkbox" name="ingat" value="1"> Ingat saya di perangkat ini
+                </label>
+                <a href="{{ route('password.request') }}" class="text-xs font-bold text-hsOrange">Lupa kata sandi?</a>
+            </div>
         @endif
 
         <button type="submit" class="hs-btn bg-hsOrange text-white w-full py-3.5 text-base">

@@ -24,6 +24,20 @@ class Format
         return ($v < 0 ? '-Rp ' : 'Rp ') . number_format(abs($v), 0, ',', '.');
     }
 
+    /** Isian rupiah dari form -> angka. "25.000" -> 25000, "12.500,50" -> 12500.5, "" -> 0 */
+    public static function bacaNominal(mixed $teks): float
+    {
+        $s = str_replace(['.', ' ', 'Rp', 'rp'], '', (string) $teks);
+
+        return round((float) str_replace(',', '.', $s), 2);
+    }
+
+    /** Angka -> teks untuk isian form ber-pemisah ribuan. 25000 -> "25.000" */
+    public static function isianNominal(float|int|string|null $nilai): string
+    {
+        return number_format((float) $nilai, 0, ',', '.');
+    }
+
     /** Hari ini dalam WIB, format 'YYYY-MM-DD'. */
     public static function hariIni(): string
     {
@@ -47,6 +61,27 @@ class Format
         $hari = (int) date('w', strtotime(self::teks($t) . ' 00:00:00 UTC'));
 
         return self::HARI[$hari] . ', ' . self::tgl($t);
+    }
+
+    /** '2026-11' -> 'November 2026' */
+    public static function namaBulan(string $bulan): string
+    {
+        $NAMA = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        [$y, $m] = array_map('intval', explode('-', $bulan));
+
+        return $NAMA[$m - 1] . ' ' . $y;
+    }
+
+    /** Tambah n bulan, tanggal dipotong ke akhir bulan kalau kelebihan: '2026-01-31' + 1 -> '2026-02-28' */
+    public static function tambahBulan(string $t, int $n = 1): string
+    {
+        [$y, $m, $d] = array_map('intval', explode('-', substr($t, 0, 10)));
+        $total = $y * 12 + ($m - 1) + $n;
+        $ty = intdiv($total, 12);
+        $tm = $total % 12 + 1;
+        $akhir = (int) date('t', gmmktime(0, 0, 0, $tm, 1, $ty));
+
+        return sprintf('%04d-%02d-%02d', $ty, $tm, min($d, $akhir));
     }
 
     /** Sapaan sesuai jam WIB. */

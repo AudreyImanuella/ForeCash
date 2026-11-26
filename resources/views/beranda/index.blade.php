@@ -1,7 +1,7 @@
-{{-- Beranda mahasiswa (port dari app/(app)/beranda/page.tsx versi Next.js).
-     Bagian gamifikasi (streak, level, badge, tantangan) menyusul saat fitur Pencapaian dibuat. --}}
+{{-- Beranda mahasiswa (port dari app/(app)/beranda/page.tsx versi Next.js). --}}
 @extends('layouts.app')
 @use('App\Support\Format')
+@use('App\Support\Gamify')
 
 @section('judul', 'Dashboard')
 @section('judul_halaman', Format::sapaan() . ', ' . $user->namaDepan() . '!')
@@ -22,7 +22,8 @@
         </a>
     @endif
 
-    <x-warning-banner :f="$f" :avatar="$user->avatar" />
+    <x-badge-baru :uid="$user->id" :badges="$g['badges']" />
+    <x-warning-banner :f="$f" :avatar="$user->avatar" :pet="$petDipakai" />
 
     {{-- Ringkasan angka --}}
     <section class="fc-stats" aria-label="Ringkasan">
@@ -83,6 +84,35 @@
             <a href="{{ $ke('transaksi.index', ['jenis' => 'transfer']) }}" class="fc-action fc-action-move"><span class="fc-action-emoji">🔁</span><span><b>Transfer</b><small>Isi e-wallet dari rekening</small></span></a>
             <a href="{{ $ke('utang.index') }}" class="fc-action fc-action-split"><span class="fc-action-emoji">🍕</span><span><b>Split bill</b><small>Bagi tagihan bareng teman</small></span></a>
         </div>
+    </section>
+
+    {{-- Gamifikasi: streak, level & badge, tantangan mingguan --}}
+    @php $badgeDapat = collect($g['badges'])->where('tingkat', '>', 0)->sortByDesc('tingkat')->values(); @endphp
+    <section class="fc-game" aria-label="Pencapaian">
+        <div class="hs-card fc-streak">
+            <span class="fc-streak-flame"><x-ikon nama="flame" :size="40" class="text-hsOrange" /></span>
+            <div>
+                <p class="fc-stat-value" style="font-size: 30px">{{ $g['streak'] }} hari</p>
+                <p class="fc-stat-sub">{{ $g['streak'] ? 'berturut-turut mencatat' : 'Catat sesuatu hari ini untuk mulai streak' }}</p>
+            </div>
+        </div>
+        <div class="hs-card p-5">
+            <x-gamifikasi bagian="level" :g="$g" />
+            <div class="mt-2 flex gap-1.5 flex-wrap">
+                @forelse ($badgeDapat->take(6) as $b)
+                    <x-badge-ikon :ikon="$b['key']" :tingkat="$b['tingkat']" :size="36" :label="$b['nama'] . ' ' . Gamify::TINGKAT[$b['tingkat']]" />
+                @empty
+                    <span class="text-xs text-slate-400">Belum ada badge</span>
+                @endforelse
+            </div>
+            @if ($g['hampir'])
+                <p class="text-[11px] mt-2"><b class="text-hsOrange">Sedikit lagi:</b> {{ $g['hampir']['nama'] }} {{ Gamify::TINGKAT[$g['hampir']['tingkat'] + 1] }} ({{ Gamify::sisaBadge($g['hampir']) }})</p>
+            @endif
+        </div>
+        <a href="{{ $ke('pencapaian') }}" class="hs-card p-5 block">
+            <x-gamifikasi bagian="tantangan" :t="$g['tantangan']" />
+            <p class="fc-link mt-2">Lihat semua pencapaian</p>
+        </a>
     </section>
 
     {{-- Saldo per wallet --}}

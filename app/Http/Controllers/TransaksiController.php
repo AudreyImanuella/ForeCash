@@ -48,7 +48,56 @@ class TransaksiController extends Controller
 
         [$wallets, $kategori] = $this->opsiForm($user);
 
-        return view('transaksi.index', compact('transaksi', 'bulan', 'jenisAwal', 'wallets', 'kategori'));
+        // untuk kartu "Batas Pengeluaran Harian"
+        $keluarHariIni = (float) $user->transactions()
+            ->where('jenis', 'pengeluaran')->whereDate('tanggal', Format::hariIni())->sum('nominal');
+
+        return view('transaksi.index', compact('transaksi', 'bulan', 'jenisAwal', 'wallets', 'kategori', 'keluarHariIni', 'user'));
+    }
+
+    /** Simpan batas pengeluaran harian (0 = tidak dibatasi). */
+    public function batasHarian(Request $request): RedirectResponse
+    {
+        $batas = Format::bacaNominal($request->input('batas_harian'));
+        if ($batas < 0 || $batas > 999999999999) {
+            return back()->with('error', 'Batas harian tidak valid.');
+        }
+        $request->user()->update(['batas_harian' => $batas]);
+
+        return back()->with('sukses', 'Batas harian diperbarui.');
+    }
+
+    /**
+     * Ekspor transaksi satu bulan ke CSV (port dari transaksi/export/route.ts).
+     * Pemisah titik koma (;) dan BOM UTF-8 supaya langsung rapi dibuka di Excel versi Indonesia.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $bulan = $request->query('bulan');
+        if (! is_string($bulan) || ! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $bulan)) {
+            $bulan = Carbon::now(Format::ZONA)->format('Y-m');
+        }
+        $dari = Carbon::parse($bulan . '-01');
+
+        $data = $request->user()->transactions()
+            ->with(['category', 'wallet', 'walletTujuan'])
+            ->where('tanggal', '>=', $dari->toDateString())
+            ->where('tanggal', '<', $dari->copy()->addMonth()->toDateString())
+            ->orderBy('tanggal')->orderBy('id')
+            ->get();
+
+        return response()->streamDownload(function () use ($data) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['Tanggal', 'Jenis', 'Keterangan', 'Kategori', 'Wallet', 'Ke Wallet', 'Nominal'], ';', '"', '', "\r\n");
+            foreach ($data as $t) {
+                fputcsv($out, [
+                    $t->tanggal->toDateString(), $t->jenis, $t->keterangan, $t->category?->nama ?? '-',
+                    $t->wallet?->nama ?? '', $t->walletTujuan?->nama ?? '', (string) (float) $t->nominal,
+                ], ';', '"', '', "\r\n");
+            }
+            fclose($out);
+        }, "forecash-{$bulan}.csv", ['Content-Type' => 'text/csv; charset=utf-8']);
     }
 
     public function store(TransaksiRequest $request): RedirectResponse

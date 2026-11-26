@@ -1,7 +1,7 @@
 {{-- Banner peringatan dini (port dari components/WarningBanner.tsx versi Next.js).
      Langitnya ikut status: cerah (aman), senja (waspada), mendung + hujan (kritis).
      Contoh: <x-warning-banner :f="$f" :avatar="$user->avatar" /> --}}
-@props(['f', 'avatar' => 'a1'])
+@props(['f', 'avatar' => 'a1', 'pet' => null])
 @use('App\Support\Format')
 @use('App\Services\Forecast')
 @php
@@ -113,5 +113,11 @@
     <div class="fc-hero-mascot">
         <div class="fc-bubble">{{ $KATA[$st] }}</div>
         <div class="fc-hero-avatar character-bounce"><x-avatar :id="$avatar" :mood="$MOOD[$st]" :size="136" /></div>
+        {{-- teman hemat yang sedang menemani (fitur Petualangan) --}}
+        @if ($pet && isset(\App\Support\Pets::PETS[$pet]) && Route::has('petualangan'))
+            <a href="{{ route('petualangan') }}" class="fc-hero-buddy" title="{{ \App\Support\Pets::PETS[$pet]['nama'] }} menemanimu">
+                <x-pet :id="$pet" :size="64" />
+            </a>
+        @endif
     </div>
 </section>
